@@ -12,9 +12,9 @@ st.set_page_config(page_title="CyberSentry - Aim to assist security analysts.",l
 st.markdown(
     """
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    MainMenu {visibility: hidden;}
+    #footer {visibility: hidden;}
+    #header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True,)
 
