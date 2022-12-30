@@ -21,7 +21,7 @@ st.markdown(
 
 
 # -------- Lottie Asset -------- #
-@st.cache
+@st.experimental_memo
 def load_lottie(url):
     r = requests.get(url)
     if r.status_code != 200:
@@ -177,7 +177,7 @@ def sidebar():
         st.warning("Input PusleID and hit enter")
 
 
-@st.cache
+@st.experimental_memo
 def analytics_ioc():
     ioc_list = []
     for pulse in pulses:
