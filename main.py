@@ -1,19 +1,13 @@
 import time
 import requests
 import streamlit as st
-from streamlit_login_auth_ui.widgets import __login__
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from streamlit_lottie import st_lottie
 
 
 st.set_page_config(page_title="CyberSentry - Aim to assist security analysts.",layout="wide")
-__login__obj = __login__(auth_token="courier_auth_token",
-                         company_name="CyberSentry",
-                         width=200, height=250,
-                         logout_button_name='Logout', hide_menu_bool=False,
-                         hide_footer_bool=False,
-                         lottie_url='https://assets2.lottiefiles.com/packages/lf20_jcikwtux.json')
 
 st.markdown(
     """
@@ -24,7 +18,7 @@ st.markdown(
     </style>
     """, unsafe_allow_html=True,)
 
-LOGGED_IN = __login__obj.build_login_ui()
+
 
 # -------- Lottie Asset -------- #
 @st.cache
@@ -210,62 +204,62 @@ def ipv4_rule(ip_addr):
     rule = "alert tcp {} any -> any any (msg:\"Traffic from IP Address {}\"; sid:1;)"
     snort_rule = rule.format(ip_address, ip_address)
     return (snort_rule)
-if LOGGED_IN == True:
-    st.markdown("<style>block-container.css-18e3th9.egzxvld2{margin-top: -180px;}</style>", unsafe_allow_html=True)
-    st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
-    st.write("###")
-    st.write("###")
-    left_column, right_column = st.columns(2)
-    time.sleep(8)
-    with left_column:
-        st.subheader("Get Real Time Threats and Advanced Analytics")
-        string = "At CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
+
+st.markdown("<style>block-container.css-18e3th9.egzxvld2{margin-top: -180px;}</style>", unsafe_allow_html=True)
+st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
+st.write("###")
+st.write("###")
+left_column, right_column = st.columns(2)
+time.sleep(8)
+with left_column:
+    st.subheader("Get Real Time Threats and Advanced Analytics")
+    string = "At CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
                  "to help security analysts stay ahead of potential threats. Checkout different tabs to find latest " \
                  "threats and analytics."
-        st.write(string, unsafe_allow_html=True)
-    with right_column:
-        st_lottie(animation, height=300, key="hacking")
+    st.write(string, unsafe_allow_html=True)
+with right_column:
+    st_lottie(animation, height=300, key="hacking")
 
-    tab_one, tab_two = st.sidebar.tabs(["Get Threat Details", "More"])
-    with tab_one:
-        sidebar()
-    with tab_two:
-        st.write("More features")
-    tab1, tab2, tab3 = st.tabs(["Threats Targeting Countries", "All Subscribed Threats", "More"])
-    with tab1:
-        first_tab()
-    with tab2:
-        left_column, right_column = st.columns(2)
-        with left_column:
-            st.subheader("Latest Threats")
-            pulses = get_data(100, 1)
+tab_one, tab_two = st.sidebar.tabs(["Get Threat Details", "More"])
+with tab_one:
+    sidebar()
+with tab_two:
+    st.write("More features")
+tab1, tab2, tab3 = st.tabs(["Threats Targeting Countries", "All Subscribed Threats", "More"])
+with tab1:
+    first_tab()
+with tab2:
+    left_column, right_column = st.columns(2)
+    with left_column:
+        st.subheader("Latest Threats")
+        pulses = get_data(100, 1)
             # Print the titles of the pulses
-            for pulse in pulses:
-                st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
-                st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
-                st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
-                st.markdown("""---""")
-        with right_column:
-            st.subheader("Analytics - IOC Types")
-            ioc_list = analytics_ioc()
-            country_counts = {}
-            for country in ioc_list:
-                if country in country_counts:
-                    country_counts[country] += 1
-                else:
-                    country_counts[country] = 1
-            df = pd.DataFrame.from_dict(country_counts, orient='Index', columns=['Amount'])
-            option = st.selectbox("View in table or pie chart", ('Table', 'Pie Chart', 'Bar Chart'))
-            if option == 'Table':
-                with st.spinner(text="Generating Table"):
-                    st.table(df)
-            if option == 'Pie Chart':
-                with st.spinner(text="Generating Pie Chart"):
-                    pie_chart_ioc(ioc_list)
+        for pulse in pulses:
+            st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
+            st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
+            st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
+            st.markdown("""---""")
+    with right_column:
+        st.subheader("Analytics - IOC Types")
+        ioc_list = analytics_ioc()
+        country_counts = {}
+        for country in ioc_list:
+            if country in country_counts:
+                country_counts[country] += 1
+            else:
+                country_counts[country] = 1
+        df = pd.DataFrame.from_dict(country_counts, orient='Index', columns=['Amount'])
+        option = st.selectbox("View in table or pie chart", ('Table', 'Pie Chart', 'Bar Chart'))
+        if option == 'Table':
+            with st.spinner(text="Generating Table"):
+                st.table(df)
+        if option == 'Pie Chart':
+            with st.spinner(text="Generating Pie Chart"):
+                pie_chart_ioc(ioc_list)
             # Create a bar chart with the DataFrame
-            if option == 'Bar Chart':
-                with st.spinner(text="Generating Bar Chart"):
-                    st.bar_chart(df, height=520)
+        if option == 'Bar Chart':
+            with st.spinner(text="Generating Bar Chart"):
+                st.bar_chart(df, height=520)
 # else:
 #
 #     st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
