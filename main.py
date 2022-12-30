@@ -33,6 +33,7 @@ animation = load_lottie("https://assets4.lottiefiles.com/packages/lf20_mcvtkrvc.
 
 
 #@st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None})
+@st.experimental_memo
 def get_data(limit, page):
     url = f"https://otx.alienvault.com/api/v1/pulses/subscribed?modified_since=2017-03-01&limit={limit}&page={page}"
     headers = {'X-OTX-API-KEY': st.secrets["key"]}
@@ -43,6 +44,7 @@ def get_data(limit, page):
 
 
 #@st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None})
+@st.experimental_memo
 def get_anlaytics_data(pulse_id):
     headers = {'X-OTX-API-KEY': st.secrets["key"]}
     response = requests.get(f'https://otx.alienvault.com/api/v1/pulses/{pulse_id}', headers=headers)
