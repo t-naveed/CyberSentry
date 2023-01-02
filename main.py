@@ -113,7 +113,7 @@ def first_tab():
             # Create a bar chart with the DataFrame
             st.bar_chart(df, height=520)
 
-        st.subheader("Snot Rule Generator")
+        st.subheader("Snort Rule Generator")
         alert_type = st.selectbox("Select The Type of Alert You Want To Generate",
                                   ('Domain', 'FileHash-SHA256', 'ipv4'))
         if alert_type == 'Domain':
