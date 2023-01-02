@@ -212,7 +212,7 @@ st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h
 st.write("###")
 st.write("###")
 left_column, right_column = st.columns(2)
-time.sleep(8)
+time.sleep(4)
 with left_column:
     st.subheader("Get Real Time Threats and Advanced Analytics")
     string = "At CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
