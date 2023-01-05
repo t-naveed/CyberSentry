@@ -125,6 +125,7 @@ celerybeat.pid
 
 # Environments
 _secret_auth_.json
+.db
 .env
 .venv
 env/
