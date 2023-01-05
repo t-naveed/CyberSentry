@@ -11,7 +11,14 @@ conn = sqlite3.connect('data.db')
 c = conn.cursor()
 
 st.set_page_config(page_title="CyberSentry - Aim to assist security analysts.", layout="wide")
-
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True,)
 
 def create_usertable():
     c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT)')
