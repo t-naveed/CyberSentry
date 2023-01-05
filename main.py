@@ -1,26 +1,43 @@
-import time
-import requests
 import streamlit as st
-
-import matplotlib.pyplot as plt
-import pandas as pd
 from streamlit_lottie import st_lottie
+import requests
+import hashlib
+import pandas as pd
+import matplotlib.pyplot as plt
+import time
+import sqlite3
+
+conn = sqlite3.connect('data.db')
+c = conn.cursor()
+
+st.set_page_config(page_title="CyberSentry - Aim to assist security analysts.", layout="wide")
 
 
-st.set_page_config(page_title="CyberSentry - Aim to assist security analysts.",layout="wide")
-
-st.markdown(
-    """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True,)
+def create_usertable():
+    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT)')
 
 
+def add_userdata(username, password):
+    c.execute('INSERT INTO userstable(username,password) VALUES (?,?)', (username, password))
+    conn.commit()
 
-# -------- Lottie Asset -------- #
+
+def login_user(username, password):
+    c.execute('SELECT * FROM userstable WHERE username =? AND password = ?', (username, password))
+    data = c.fetchall()
+    return data
+
+
+def make_hashes(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+
+def check_hashes(password, hashed_text):
+    if make_hashes(password) == hashed_text:
+        return hashed_text
+    return False
+
+
 @st.experimental_memo
 def load_lottie(url):
     r = requests.get(url)
@@ -32,7 +49,6 @@ def load_lottie(url):
 animation = load_lottie("https://assets4.lottiefiles.com/packages/lf20_mcvtkrvc.json")
 
 
-#@st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None})
 @st.experimental_memo
 def get_data(limit, page):
     url = f"https://otx.alienvault.com/api/v1/pulses/subscribed?modified_since=2017-03-01&limit={limit}&page={page}"
@@ -43,7 +59,6 @@ def get_data(limit, page):
     return pulses
 
 
-#@st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None})
 @st.experimental_memo
 def get_anlaytics_data(pulse_id):
     headers = {'X-OTX-API-KEY': st.secrets["key"]}
@@ -52,6 +67,18 @@ def get_anlaytics_data(pulse_id):
     return data
 
 
+@st.experimental_memo
+def analytics_ioc():
+    ioc_list = []
+    for pulse in pulses:
+        pulse_id = (pulse['id'])
+        data = get_anlaytics_data(pulse_id)
+        for items in data['indicators']:
+            ioc_list.append(items['type'])
+    return ioc_list
+
+
+@st.experimental_memo
 def pie_chart_ioc(ioc_type_list):
     category_counts = {}
     for category in ioc_type_list:
@@ -75,118 +102,6 @@ def pie_chart_ioc(ioc_type_list):
     st.pyplot()
 
 
-def first_tab():
-    left_column, right_column = st.columns(2)
-    with left_column:
-        st.subheader("These Threats Are Targeting USA")
-        pulses = get_data(100, 1)
-        # Print the titles of the pulses
-        for pulse in pulses:
-            for items in pulse['targeted_countries']:
-                if items == "United States of America":
-                    st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
-                    st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
-                    st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
-                    st.markdown("""---""")
-    with right_column:
-        st.subheader("Threats Targeteing Countries")
-        with st.spinner('Generating Graph...'):
-            time.sleep(5)
-            pulses = get_data(100, 1)
-            country_list = []
-            for pulse in pulses:
-                pulse_id = (pulse['id'])
-                data = get_anlaytics_data(pulse_id)
-                for items in data['targeted_countries']:
-                    country_list.append(items)
-
-            country_counts = {}
-            for country in country_list:
-                if country in country_counts:
-                    country_counts[country] += 1
-                else:
-                    country_counts[country] = 1
-
-                # Create a DataFrame from the dictionary of country counts
-            df = pd.DataFrame.from_dict(country_counts, orient='index', columns=['Targeted Threats'])
-
-            # Create a bar chart with the DataFrame
-            st.bar_chart(df, height=520)
-
-        st.subheader("Snort Rule Generator")
-        alert_type = st.selectbox("Select The Type of Alert You Want To Generate",
-                                  ('Domain', 'FileHash-SHA256', 'ipv4'))
-        if alert_type == 'Domain':
-            domain = st.text_input("Enter Domain Name")
-            if domain:
-                rule = domain_rule(domain)
-                st.success(rule)
-        if alert_type == 'FileHash-SHA256':
-            FileHashSHA256 = st.text_input("Enter FileHash-SHA256")
-            if FileHashSHA256:
-                rule = hash_256_rule(FileHashSHA256)
-                st.success(rule)
-        if alert_type == 'ipv4':
-            ipv4 = st.text_input("Enter ipv4 address here")
-            if ipv4:
-                rule = ipv4_rule(ipv4)
-                st.success(rule)
-
-
-def sidebar():
-    st.subheader("Get Threat Details")
-    pulse_id = st.text_input("Input PulseId To See Details", key='for-details')
-    if pulse_id:
-        with st.spinner(text="Gathering Details"):
-            data = get_anlaytics_data(pulse_id)
-            adversary = data['adversary']
-            targeted_countries = data['targeted_countries']
-            malware_families = data["malware_families"]
-            # st.write(data)
-            ioc_type = []
-            with st.expander("Indicator of Compromise"):
-                for items in data['indicators']:
-                    ioc_type.append(items['type'])
-                    st.write('<b>Indicator: </b>' + items['indicator'], unsafe_allow_html=True)
-                    st.write('<b>Type: </b>' + items['type'], unsafe_allow_html=True)
-
-            with st.expander("Adversary"):
-                st.write("<b>Adversary: </b>" + adversary, unsafe_allow_html=True)
-            with st.expander("Targeted Countries"):
-                st.write('<b>Targeted Countries are: </b>', unsafe_allow_html=True)
-                for items in data['targeted_countries']:
-                    if items == 0:
-                        st.write("Targeted Countries are Unknown")
-                    else:
-                        st.write(items)
-            with st.expander("Malware Families"):
-                st.write('<b>Malware Families: </b>', unsafe_allow_html=True)
-                for items in data['malware_families']:
-                    if items == 0:
-                        st.write("Targeted Countries are Unknown")
-                    else:
-                        st.write(items)
-            with st.expander("References"):
-                st.write('<b>References: </b>', unsafe_allow_html=True)
-                for items in data['references']:
-                    if items == 0:
-                        st.write("Targeted Countries are Unknown")
-                    else:
-                        st.write(items)
-    else:
-        st.warning("Input PusleID and hit enter")
-
-
-@st.experimental_memo
-def analytics_ioc():
-    ioc_list = []
-    for pulse in pulses:
-        pulse_id = (pulse['id'])
-        data = get_anlaytics_data(pulse_id)
-        for items in data['indicators']:
-            ioc_list.append(items['type'])
-    return ioc_list
-
 def domain_rule(domain):
     domain = domain
     rule = "alert tcp any any -> any 80 (msg:\"Traffic to Domain {}\"; content:\"Host: {}\"; sid:1;)"
@@ -207,74 +122,200 @@ def ipv4_rule(ip_addr):
     snort_rule = rule.format(ip_address, ip_address)
     return (snort_rule)
 
-st.markdown("<style>block-container.css-18e3th9.egzxvld2{margin-top: -180px;}</style>", unsafe_allow_html=True)
-st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
-st.write("###")
-st.write("###")
-left_column, right_column = st.columns(2)
-time.sleep(4)
-with left_column:
-    st.subheader("Get Real Time Threats and Advanced Analytics")
-    string = "At CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
-                 "to help security analysts stay ahead of potential threats. Checkout different tabs to find latest " \
-                 "threats and analytics."
-    st.write(string, unsafe_allow_html=True)
-with right_column:
-    st_lottie(animation, height=300, key="hacking")
 
-tab_one, tab_two = st.sidebar.tabs(["Get Threat Details", "More"])
-with tab_one:
-    sidebar()
-with tab_two:
-    st.write("More features")
-tab1, tab2, tab3 = st.tabs(["Threats Targeting Countries", "All Subscribed Threats", "More"])
-with tab1:
-    first_tab()
-with tab2:
+st.sidebar.title("Welcome to CyberSentry")
+st.sidebar.markdown("""---""")
+st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
+st.write("##")
+menu = ["Home", "Login", "SignUp"]
+choice = st.sidebar.selectbox("Navigation Menu", menu)
+st.sidebar.markdown("""---""")
+if choice == "Home":
     left_column, right_column = st.columns(2)
     with left_column:
-        st.subheader("Latest Threats")
-        pulses = get_data(100, 1)
-            # Print the titles of the pulses
-        for pulse in pulses:
-            st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
-            st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
-            st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
-            st.markdown("""---""")
+        st.subheader("Get Real Time Threats and Advanced Analytics")
+        st.write("##")
+        string = "Welcome to CyberSentry, where we provide real-time cyber threat intelligence and advanced " \
+                 "analytics to assist security analysts in protecting their organizations. Our state-of-the-art " \
+                 "technology allows security teams to stay ahead of potential threats and respond quickly to any " \
+                 "incidents that may occur. With a team of highly skilled and experienced professionals, " \
+                 "we are dedicated to helping our clients achieve the highest level of security possible. At " \
+                 "CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
+                 "to help security analysts stay ahead of potential threats. Checkout different tabs to find latest " \
+                 "threats and analytics."
+        st.write(string, unsafe_allow_html=True)
     with right_column:
-        st.subheader("Analytics - IOC Types")
-        ioc_list = analytics_ioc()
-        country_counts = {}
-        for country in ioc_list:
-            if country in country_counts:
-                country_counts[country] += 1
-            else:
-                country_counts[country] = 1
-        df = pd.DataFrame.from_dict(country_counts, orient='Index', columns=['Amount'])
-        option = st.selectbox("View in table or pie chart", ('Table', 'Pie Chart', 'Bar Chart'))
-        if option == 'Table':
-            with st.spinner(text="Generating Table"):
-                st.table(df)
-        if option == 'Pie Chart':
-            with st.spinner(text="Generating Pie Chart"):
-                pie_chart_ioc(ioc_list)
-            # Create a bar chart with the DataFrame
-        if option == 'Bar Chart':
-            with st.spinner(text="Generating Bar Chart"):
-                st.bar_chart(df, height=520)
-# else:
-#
-#     st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
-#     st.subheader("Get Real Time Threats and Advanced Analytics")
-#     st.write("###")
-#     string = "At CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
-#              "to help security analysts stay ahead of potential threats. Our platform offers detailed information " \
-#              "about the latest cyber threats, including the types of attacks being carried out and the countries " \
-#              "that are most frequently targeted. With our advanced analytics capabilities, security teams can " \
-#              "gain a deeper understanding of the threats they face and develop more effective strategies for " \
-#              "protecting their organizations. We are committed to helping our clients achieve the highest level " \
-#              "of security possible and to stay ahead of the constantly evolving threat landscape."
-#     st.write(string, unsafe_allow_html=True)
+        st_lottie(animation, height=300, key="hacking")
+
+elif choice == "Login":
+    st.sidebar.header("Login Section")
+
+    username = st.sidebar.text_input("User Name")
+    password = st.sidebar.text_input("Password", type='password')
+
+    login = st.sidebar.checkbox("Login/Log out")
+    if login:
+        create_usertable()
+        hashed_pswd = make_hashes(password)
+        result = login_user(username, check_hashes(password, hashed_pswd))
+        if result:
+            left_column, middle_column, right_column = st.columns(3)
+            with left_column:
+                # Get the current time
+                now = time.time()
+                # Extract the information you need
+                hour = time.localtime(now).tm_hour
+                minute = time.localtime(now).tm_min
+                second = time.localtime(now).tm_sec
+                st.success(f"Logged in as {username}. All data are updated till {hour}:{minute}:{second}")
+                st.subheader("Select Country")
+                countries = ["United States of America", "Korea, Republic of", "United Arab Emirates", "Israel",
+                             "India", "Canada", "Ukraine"]
+                selected_country = st.selectbox("Select Your Country", countries)
+                st.markdown("""---""")
+                st.subheader("Get Threat Details")
+                pulse_id = st.text_input("Input PulseId To See Details", key='for-details')
+                if pulse_id:
+                    with st.spinner(text="Gathering Details"):
+                        data = get_anlaytics_data(pulse_id)
+                        adversary = data['adversary']
+                        targeted_countries = data['targeted_countries']
+                        malware_families = data["malware_families"]
+                        # st.write(data)
+                        ioc_type = []
+                        with st.expander("Indicator of Compromise"):
+                            for items in data['indicators']:
+                                ioc_type.append(items['type'])
+                                st.write('<b>Indicator: </b>' + items['indicator'], unsafe_allow_html=True)
+                                st.write('<b>Type: </b>' + items['type'], unsafe_allow_html=True)
+
+                        with st.expander("Adversary"):
+                            st.write("<b>Adversary: </b>" + adversary, unsafe_allow_html=True)
+                        with st.expander("Targeted Countries"):
+                            st.write('<b>Targeted Countries are: </b>', unsafe_allow_html=True)
+                            for items in data['targeted_countries']:
+                                if items == 0:
+                                    st.write("Targeted Countries are Unknown")
+                                else:
+                                    st.write(items)
+                        with st.expander("Malware Families"):
+                            st.write('<b>Malware Families: </b>', unsafe_allow_html=True)
+                            for items in data['malware_families']:
+                                if items == 0:
+                                    st.write("Targeted Countries are Unknown")
+                                else:
+                                    st.write(items)
+                        with st.expander("References"):
+                            st.write('<b>References: </b>', unsafe_allow_html=True)
+                            for items in data['references']:
+                                if items == 0:
+                                    st.write("Targeted Countries are Unknown")
+                                else:
+                                    st.write(items)
+                else:
+                    st.warning("Input PusleID and hit enter")
+                st.subheader("Snot Rule Generator")
+                alert_type = st.selectbox("Select The Type of Alert You Want To Generate",
+                                          ('Domain', 'FileHash-SHA256', 'ipv4'))
+                if alert_type == 'Domain':
+                    domain = st.text_input("Enter Domain Name")
+                    if domain:
+                        rule = domain_rule(domain)
+                        st.success(rule)
+                if alert_type == 'FileHash-SHA256':
+                    FileHashSHA256 = st.text_input("Enter FileHash-SHA256")
+                    if FileHashSHA256:
+                        rule = hash_256_rule(FileHashSHA256)
+                        st.success(rule)
+                if alert_type == 'ipv4':
+                    ipv4 = st.text_input("Enter ipv4 address here")
+                    if ipv4:
+                        rule = ipv4_rule(ipv4)
+                        st.success(rule)
+                st.markdown("""---""")
+                st.subheader("Load More Threats")
+                pages = ["1", "2", "3", "4", "5"]
+                selected_page = st.selectbox("Load More Pages", pages)
+            with middle_column:
+                if selected_country and selected_page:
+                    st.subheader(f"These Threats Are Targeting {selected_country}")
+                    pulses = get_data(100, selected_page)
+                    # Print the titles of the pulses
+                    for pulse in pulses:
+                        for items in pulse['targeted_countries']:
+                            if items == selected_country:
+                                st.info('Title: ' + (pulse['name']))
+                                st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
+                                st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
+                                st.markdown("""---""")
+
+            with right_column:
+                tab1, tab2 = st.tabs(["Analytics", "All 100 Threats"])
+                with tab1:
+                    st.subheader("Threats Targeteing Countries")
+                    with st.spinner('Generating Graph...'):
+                        time.sleep(5)
+                        pulses = get_data(100, selected_page)
+                        country_list = []
+                        for pulse in pulses:
+                            pulse_id = (pulse['id'])
+                            data = get_anlaytics_data(pulse_id)
+                            for items in data['targeted_countries']:
+                                country_list.append(items)
+
+                        country_counts = {}
+                        for country in country_list:
+                            if country in country_counts:
+                                country_counts[country] += 1
+                            else:
+                                country_counts[country] = 1
+
+                            # Create a DataFrame from the dictionary of country counts
+                        df = pd.DataFrame.from_dict(country_counts, orient='index', columns=['Targeted Threats'])
+
+                        # Create a bar chart with the DataFrame
+                        st.bar_chart(df, height=520)
+                        st.markdown("""---""")
+                    st.subheader("Analytics - IOC Types")
+                    ioc_list = analytics_ioc()
+                    country_counts = {}
+                    for country in ioc_list:
+                        if country in country_counts:
+                            country_counts[country] += 1
+                        else:
+                            country_counts[country] = 1
+                    df = pd.DataFrame.from_dict(country_counts, orient='Index', columns=['Amount'])
+                    with st.spinner(text="Generating Table"):
+                        pie_chart_ioc(ioc_list)
+                        st.table(df)
+                        st.markdown("""---""")
+                with tab2:
+                    st.subheader("All Threats")
+                    pulses = get_data(100, selected_page)
+                    # Print the titles of the pulses
+                    for pulse in pulses:
+                        st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
+                        st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
+                        st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
+                        st.markdown("""---""")
+        else:
+            st.error("Incorrect Username/Password")
+    else:
+        st.warning("LogIn or SignUp From The Navigation Menu")
+
+
+
+elif choice == "SignUp":
+    st.subheader("Create New Account")
+    new_user = st.text_input("Username")
+    new_password = st.text_input("Use Strong Password", type='password')
+
+    if st.button("SignUp"):
+        create_usertable()
+        add_userdata(new_user, make_hashes(new_password))
+        st.success("You have successfully created a valid account.")
+        st.info("Go to Login Menu to login")
+
 st.markdown(
     """
     <style>
@@ -287,8 +328,8 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #F0F2F6;
-        color: #31333F;
+        background-color: #b2b2bb;
+        color: black;
     }
     </style>
     <div class="footer">
