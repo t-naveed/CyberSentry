@@ -2,6 +2,7 @@
 showPyplotGlobalUse = false
 
 [theme]
-base="light"
-primaryColor="#245cf7"
-secondaryBackgroundColor="#b2b2bb"
+base="dark"
+primaryColor="#ffffff"
+font="serif"
+
