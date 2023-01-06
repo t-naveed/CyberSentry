@@ -132,7 +132,7 @@ def ipv4_rule(ip_addr):
 
 st.sidebar.title("Welcome to CyberSentry")
 st.sidebar.markdown("""---""")
-st.markdown("<h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1>", unsafe_allow_html=True)
+st.markdown("<div style='background-color: rgb(14, 17, 23); color:#f1f1f1; text-align:center;'><h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1></div>", unsafe_allow_html=True)
 st.write("##")
 menu = ["Home", "Login", "SignUp"]
 choice = st.sidebar.selectbox("Navigation Menu", menu)
@@ -162,11 +162,42 @@ elif choice == "Login":
 
     login = st.sidebar.checkbox("Login/Log out")
     if login:
+        st.markdown("""
+        <style>
+        .css-1r6slb0.e1tzin5v2 {
+            border: 1px solid black;
+            padding: 10px;
+            background-color: rgb(14, 17, 23);
+            border-radius: 15px;
+            overflow: scroll;
+            height: 600px;
+            box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+        }
+        .css-keje6w.e1tzin5v2 {
+            border: 1px solid black;
+            padding: 10px;
+            /* background-color: #f1f1f1; */
+            border-radius: 15px;
+            overflow: scroll;
+            height: 600px;
+            box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+}
+        .css-1l269bu.e1tzin5v2 {
+            border: 1px solid black;
+            padding: 10px;
+            background-color: rgb(14, 17, 23);
+            border-radius: 15px;
+            overflow: scroll;
+            height: 600px;
+            box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+}
+        </style>
+        """, unsafe_allow_html=True)
         create_usertable()
         hashed_pswd = make_hashes(password)
         result = login_user(username, check_hashes(password, hashed_pswd))
         if result:
-            left_column, middle_column, right_column = st.columns(3)
+            left_column, middle_column, right_column = st.columns([1, 2, 3])
             with left_column:
                 # Get the current time
                 now = time.time()
@@ -174,14 +205,16 @@ elif choice == "Login":
                 hour = time.localtime(now).tm_hour
                 minute = time.localtime(now).tm_min
                 second = time.localtime(now).tm_sec
-                st.success(f"Logged in as {username}. All data are updated till {hour}:{minute}:{second}")
+                st.success(f"Logged in as {username}. All data are up to date as of now {hour}:{minute}:{second}")
                 st.subheader("Select Country")
                 countries = ["United States of America", "Korea, Republic of", "United Arab Emirates", "Israel",
                              "India", "Canada", "Ukraine"]
                 selected_country = st.selectbox("Select Your Country", countries)
-                st.markdown("""---""")
+                pages = ["1", "2", "3", "4", "5"]
+                selected_page = st.selectbox("Load More Threats", pages)
                 st.subheader("Get Threat Details")
                 pulse_id = st.text_input("Input PulseId To See Details", key='for-details')
+
                 if pulse_id:
                     with st.spinner(text="Gathering Details"):
                         data = get_anlaytics_data(pulse_id)
@@ -221,28 +254,7 @@ elif choice == "Login":
                                     st.write(items)
                 else:
                     st.warning("Input PusleID and hit enter")
-                st.subheader("Snot Rule Generator")
-                alert_type = st.selectbox("Select The Type of Alert You Want To Generate",
-                                          ('Domain', 'FileHash-SHA256', 'ipv4'))
-                if alert_type == 'Domain':
-                    domain = st.text_input("Enter Domain Name")
-                    if domain:
-                        rule = domain_rule(domain)
-                        st.success(rule)
-                if alert_type == 'FileHash-SHA256':
-                    FileHashSHA256 = st.text_input("Enter FileHash-SHA256")
-                    if FileHashSHA256:
-                        rule = hash_256_rule(FileHashSHA256)
-                        st.success(rule)
-                if alert_type == 'ipv4':
-                    ipv4 = st.text_input("Enter ipv4 address here")
-                    if ipv4:
-                        rule = ipv4_rule(ipv4)
-                        st.success(rule)
-                st.markdown("""---""")
-                st.subheader("Load More Threats")
-                pages = ["1", "2", "3", "4", "5"]
-                selected_page = st.selectbox("Load More Pages", pages)
+
             with middle_column:
                 if selected_country and selected_page:
                     st.subheader(f"These Threats Are Targeting {selected_country}")
@@ -257,7 +269,7 @@ elif choice == "Login":
                                 st.markdown("""---""")
 
             with right_column:
-                tab1, tab2 = st.tabs(["Analytics", "All 100 Threats"])
+                tab1, tab2, tab3, tab4 = st.tabs(["Targeting Countries", "All 100 Threats", "IOC Percentages", "IDS Rule"])
                 with tab1:
                     st.subheader("Threats Targeteing Countries")
                     with st.spinner('Generating Graph...'):
@@ -283,6 +295,17 @@ elif choice == "Login":
                         # Create a bar chart with the DataFrame
                         st.bar_chart(df, height=520)
                         st.markdown("""---""")
+
+                with tab2:
+                    st.subheader("All Threats")
+                    pulses = get_data(100, selected_page)
+                    # Print the titles of the pulses
+                    for pulse in pulses:
+                        st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
+                        st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
+                        st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
+                        st.markdown("""---""")
+                with tab3:
                     st.subheader("Analytics - IOC Types")
                     ioc_list = analytics_ioc()
                     country_counts = {}
@@ -296,15 +319,26 @@ elif choice == "Login":
                         pie_chart_ioc(ioc_list)
                         st.table(df)
                         st.markdown("""---""")
-                with tab2:
-                    st.subheader("All Threats")
-                    pulses = get_data(100, selected_page)
-                    # Print the titles of the pulses
-                    for pulse in pulses:
-                        st.write('<b>Title</b>: ' + (pulse['name']), unsafe_allow_html=True)
-                        st.write('<b>PulseId</b>: ' + (pulse['id']), unsafe_allow_html=True)
-                        st.write('<b>Description</b>: ' + (pulse['description']), unsafe_allow_html=True)
-                        st.markdown("""---""")
+                with tab4:
+                    st.subheader("Snort Rule Generator")
+                    alert_type = st.selectbox("Select The Type of Alert You Want To Generate",
+                                              ('Domain', 'FileHash-SHA256', 'ipv4'))
+                    if alert_type == 'Domain':
+                        domain = st.text_input("Enter Domain Name")
+                        if domain:
+                            rule = domain_rule(domain)
+                            st.success(rule)
+                    if alert_type == 'FileHash-SHA256':
+                        FileHashSHA256 = st.text_input("Enter FileHash-SHA256")
+                        if FileHashSHA256:
+                            rule = hash_256_rule(FileHashSHA256)
+                            st.success(rule)
+                    if alert_type == 'ipv4':
+                        ipv4 = st.text_input("Enter ipv4 address here")
+                        if ipv4:
+                            rule = ipv4_rule(ipv4)
+                            st.success(rule)
+                    st.markdown("""---""")
         else:
             st.error("Incorrect Username/Password")
     else:
@@ -335,8 +369,8 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #b2b2bb;
-        color: black;
+        background-color: #262730;
+        color: white;
     }
     </style>
     <div class="footer">
@@ -346,3 +380,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
