@@ -53,8 +53,8 @@ def load_lottie(url):
     return r.json()
 
 
-animation = load_lottie("https://assets4.lottiefiles.com/packages/lf20_mcvtkrvc.json")
-
+animation = load_lottie("https://assets1.lottiefiles.com/packages/lf20_dews3j6m.json")
+animation2 = load_lottie("https://assets1.lottiefiles.com/private_files/lf30_4y2cuiyr.json")
 
 @st.experimental_memo
 def get_data(limit, page):
@@ -132,15 +132,28 @@ def ipv4_rule(ip_addr):
 
 st.sidebar.title("Welcome to CyberSentry")
 st.sidebar.markdown("""---""")
-st.markdown("<div style='background-color: rgb(14, 17, 23); color:#f1f1f1; text-align:center;'><h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: -100px;background-color: rgb(14, 17, 23); color:#f1f1f1; text-align:center;'><h1>CyberSentry<sub><i>Aim To Assist Security Analysts</i></sub></h1></div>", unsafe_allow_html=True)
 st.write("##")
 menu = ["Home", "Login", "SignUp"]
 choice = st.sidebar.selectbox("Navigation Menu", menu)
 st.sidebar.markdown("""---""")
 if choice == "Home":
+    st.markdown("""
+    <style>
+    .css-1uff4tb p {
+            border: 1px solid black;
+            padding: 10px;
+            /* background-color: #f1f1f1; */
+            border-radius: 15px;
+            overflow: scroll;
+            height: 300px;
+            box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+            letter-spacing: 1px;
+    </style>
+    """,unsafe_allow_html=True)
+    st.subheader("Get Real Time Threats and Advanced Analytics")
     left_column, right_column = st.columns(2)
     with left_column:
-        st.subheader("Get Real Time Threats and Advanced Analytics")
         st.write("##")
         string = "Welcome to CyberSentry, where we provide real-time cyber threat intelligence and advanced " \
                  "analytics to assist security analysts in protecting their organizations. Our state-of-the-art " \
@@ -152,7 +165,8 @@ if choice == "Home":
                  "threats and analytics."
         st.write(string, unsafe_allow_html=True)
     with right_column:
-        st_lottie(animation, height=300, key="hacking")
+        st_lottie(animation2, height=300, key="hacking")
+        #st_lottie(animation, height=300, key="analytics")
 
 elif choice == "Login":
     st.sidebar.header("Login Section")
