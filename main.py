@@ -159,7 +159,7 @@ if choice == "Home":
     </style>
     """,unsafe_allow_html=True)
     st.subheader("Get Real Time Threats and Advanced Analytics")
-    left_column, right_column = st.columns(2)
+    leleft_column, middle_column, right_column = st.columns(3)
     with left_column:
         string = "About CyberSentry:<ul>Welcome to CyberSentry, where we provide real-time cyber threat intelligence and advanced " \
                  "analytics to assist security analysts in protecting their organizations. Our state-of-the-art " \
