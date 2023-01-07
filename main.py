@@ -140,33 +140,43 @@ st.sidebar.markdown("""---""")
 if choice == "Home":
     st.markdown("""
     <style>
-    .css-1uff4tb p {
+    .css-1r6slb0.e1tzin5v2 {
             border: 1px solid black;
             padding: 10px;
             /* background-color: #f1f1f1; */
             border-radius: 15px;
-            overflow: scroll;
-            height: 300px;
+            #overflow: scroll;
+            height: 400px;
             box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.5s;
+            }
+    .css-1r6slb0.e1tzin5v2:hover{
+            transform: scale(0.96);
+            }
     </style>
     """,unsafe_allow_html=True)
     st.subheader("Get Real Time Threats and Advanced Analytics")
     left_column, right_column = st.columns(2)
-    with left_column:
-        st.write("##")
-        string = "Welcome to CyberSentry, where we provide real-time cyber threat intelligence and advanced " \
+        with left_column:
+        string = "About CyberSentry:<ul>Welcome to CyberSentry, where we provide real-time cyber threat intelligence and advanced " \
                  "analytics to assist security analysts in protecting their organizations. Our state-of-the-art " \
                  "technology allows security teams to stay ahead of potential threats and respond quickly to any " \
-                 "incidents that may occur. With a team of highly skilled and experienced professionals, " \
-                 "we are dedicated to helping our clients achieve the highest level of security possible. At " \
-                 "CyberSentry, our mission is to provide real-time threat intelligence and advanced analytics " \
-                 "to help security analysts stay ahead of potential threats. Checkout different tabs to find latest " \
-                 "threats and analytics."
+                 "incidents that may occur.</ul>"
+        st.write(string, unsafe_allow_html=True)
+    with middle_column:
+        string = "Key Features:" \
+                 "<li>More Than 500 Threats From Across The World.</li><li>Analytics of Threats Categorized By " \
+                 "Countries.</li><li>In Depth Details of Each Threat. " \
+                 "</li><li>Analytics of IOC Collected From All Threats. " \
+                 "</li><li>Rule Generator For Intrusion Detection System." \
+                 "</li>"
         st.write(string, unsafe_allow_html=True)
     with right_column:
         st_lottie(animation2, height=300, key="hacking")
-        #st_lottie(animation, height=300, key="analytics")
+        # st_lottie(animation, height=300, key="analytics")
 
 elif choice == "Login":
     st.sidebar.header("Login Section")
