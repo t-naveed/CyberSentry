@@ -184,8 +184,11 @@ elif choice == "Login":
     username = st.sidebar.text_input("User Name")
     password = st.sidebar.text_input("Password", type='password')
 
-    login = st.sidebar.checkbox("Login/Log out")
-    if login:
+    login = st.sidebar.button("Login")
+    if "load_state" not in st.session_state:
+        st.session_state.load_state = False
+    if login or st.session_state.load_state:
+        st.session_state.load_state = True
         st.markdown("""
         <style>
         .css-1r6slb0.e1tzin5v2 {
