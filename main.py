@@ -168,10 +168,10 @@ if choice == "Home":
         st.write(string, unsafe_allow_html=True)
     with middle_column:
         string = "Key Features:" \
-                 "<li>More Than 500 Threats From Across The World.</li><li>Analytics of Threats Categorized By " \
+                 "<li>Threats From Across The World.</li><li>Analytics of Threats Categorized By " \
                  "Countries.</li><li>In Depth Details of Each Threat. " \
                  "</li><li>Analytics of IOC Collected From All Threats. " \
-                 "</li><li>Rule Generator For Intrusion Detection System." \
+                 "</li><li>Rule Generator For Intrusion Detection System and Firewall." \
                  "</li>"
         st.write(string, unsafe_allow_html=True)
     with right_column:
