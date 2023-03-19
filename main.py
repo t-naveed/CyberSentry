@@ -401,7 +401,7 @@ st.markdown(
     }
     </style>
     <div class="footer">
-        &copy; All Right Reserved by Tasin Naveed 2022
+        &copy; All Right Reserved by Tasin Naveed 2023
     </div>
 
     """,
